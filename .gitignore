@@ -29,7 +29,7 @@ build/
 # Spring Boot
 .DS_Store
 .springBeans
-/src/main/resources/application.properties
+**/application.properties
 
 
 # Thumbnails
