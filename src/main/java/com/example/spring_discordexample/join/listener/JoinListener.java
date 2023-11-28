@@ -22,7 +22,7 @@ public class JoinListener extends ListenerAdapter {
         if (event.getName().equals("join")) {
             String discordId = event.getUser().getId();
 
-            if (joinService.alreadyExist(discordId)){
+            if (joinService.alreadyExist(discordId)) {
                 event.reply("이미 처리된 사용자입니다.").setEphemeral(true).queue();
                 return;
             }
@@ -38,7 +38,7 @@ public class JoinListener extends ListenerAdapter {
             TextInput birthInput = TextInput.create("birth", "생년월일", TextInputStyle.SHORT)
                     .setPlaceholder("YYYYMMDD 형식으로 작성해주세요.")
                     .setRequired(true)
-                    .setMaxLength(8)
+                    .setMinLength(8)
                     .setMaxLength(8)
                     .build();
 

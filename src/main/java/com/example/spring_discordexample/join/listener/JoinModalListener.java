@@ -1,7 +1,6 @@
 package com.example.spring_discordexample.join.listener;
 
 import com.example.spring_discordexample.join.dto.JoinRequestDto;
-import com.example.spring_discordexample.join.dto.JoinResponseDto;
 import com.example.spring_discordexample.join.enums.Tier;
 import com.example.spring_discordexample.join.service.JoinService;
 import com.example.spring_discordexample.utill.DateUtils;
@@ -20,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,12 +38,31 @@ public class JoinModalListener extends ListenerAdapter {
     @Override
     public void onModalInteraction(@Nonnull ModalInteractionEvent event) {
         if (event.getModalId().equals("joinModal")) {
-            // TODO 값을 받고 검증하는 로직 구현
+
+            String birthRegex = "\\d{4}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])";
+            String phoneRegex = "010\\\\d{7,8}";
+
+            String birth = Objects.requireNonNull(event.getValue("birth")).getAsString();
+            String phone = Objects.requireNonNull(event.getValue("phone")).getAsString();
+
+            try {
+                Pattern.compile(birthRegex);
+            } catch (PatternSyntaxException e) {
+                event.reply("잘못된 생년월일입니다. 다시 입력해주세요.").setEphemeral(true).queue();
+                return;
+            }
+
+            try {
+                Pattern.compile(phoneRegex);
+            } catch (PatternSyntaxException e) {
+                event.reply("잘못된 전화번호입니다. 다시 입력해주세요.").setEphemeral(true).queue();
+                return;
+            }
 
             log.info("===Modal Listener Working===");
             joinRequestDto.setName(Objects.requireNonNull(event.getValue("name")).getAsString());
-            joinRequestDto.setBirth(DateUtils.stringToLocalDate(Objects.requireNonNull(event.getValue("birth")).getAsString()));
-            joinRequestDto.setPhone(Objects.requireNonNull(event.getValue("phone")).getAsString());
+            joinRequestDto.setBirth(DateUtils.stringToLocalDate(birth));
+            joinRequestDto.setPhone(phone);
             joinRequestDto.setSteamId(Objects.requireNonNull(event.getValue("steam")).getAsString());
             joinRequestDto.setBattleGroundId(Objects.requireNonNull(event.getValue("battleground")).getAsString());
 
@@ -71,7 +91,9 @@ public class JoinModalListener extends ListenerAdapter {
                     )
                     .addActionRow(
                             Button.primary("check", "확인")
-                    ).queue();
+                    )
+                    .setEphemeral(true)
+                    .queue();
 
 
         }
@@ -89,7 +111,7 @@ public class JoinModalListener extends ListenerAdapter {
             event.reply(event.getValues().get(0) + "티어가 선택되었습니다.").setEphemeral(true).queue();
         }
 
-        if (event.getComponentId().equals("streamer")){
+        if (event.getComponentId().equals("streamer")) {
             joinRequestDto.setFavoriteStreamer(event.getValues().get(0));
             event.reply(event.getValues().get(0) + "을 선택하였습니다.").setEphemeral(true).queue();
         }
@@ -100,8 +122,9 @@ public class JoinModalListener extends ListenerAdapter {
     public void onButtonInteraction(ButtonInteractionEvent event) {
         if (event.getComponentId().equals("check")) {
             String discordId = event.getUser().getId();
+            String discordName = event.getUser().getEffectiveName();
             joinRequestDto.setDiscordId(discordId);
-            EmbedBuilder eb = getEmbedBuilder();
+            EmbedBuilder eb = getEmbedBuilder(discordName);
 
             MessageEmbed embed = eb.build();
 
@@ -110,6 +133,7 @@ public class JoinModalListener extends ListenerAdapter {
                     .addActionRow(
                             Button.primary("send", "신청하기")
                     )
+                    .setEphemeral(true)
                     .queue();
         }
 
@@ -120,7 +144,7 @@ public class JoinModalListener extends ListenerAdapter {
     }
 
     @NotNull
-    private EmbedBuilder getEmbedBuilder() {
+    private EmbedBuilder getEmbedBuilder(String discordName) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(new Color(221, 8, 23));
         eb.setAuthor("재확인");
@@ -129,7 +153,7 @@ public class JoinModalListener extends ListenerAdapter {
         eb.addField("전화번호", joinRequestDto.getPhone(), true);
         eb.addField("스팀 아이디", joinRequestDto.getSteamId(), true);
         eb.addField("배틀그라운드 아이디", joinRequestDto.getBattleGroundId(), true);
-        eb.addField("디스코드 아이디", joinRequestDto.getDiscordId(), true);
+        eb.addField("디스코드 닉네임", discordName, true);
         eb.addField("게임 모드", joinRequestDto.getMode(), true);
         eb.addField("티어", String.valueOf(joinRequestDto.getTier()), true);
         eb.addField("선호 스트리머", joinRequestDto.getFavoriteStreamer(), true);

@@ -12,10 +12,9 @@ public interface JoinService {
     JoinResponseDto read(String discordId);
 
     // 삭제
-    JoinResponseDto delete(String discordId);
+    void delete(String discordId);
 
-    Boolean alreadyExist(String discordId);
-
+    boolean alreadyExist(String discordId);
 
 
 }

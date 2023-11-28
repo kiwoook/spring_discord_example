@@ -32,11 +32,12 @@ public class JoinInfo {
     @Column(name = "battleground_id")
     private String battleGroundId;
 
-    @Column(name = "discord_id")
+    @Column(name = "discord_id", unique = true)
     private String discordId;
 
     private String mode;
 
+    @Enumerated(EnumType.STRING)
     private Tier tier;
 
     @Column(name = "favorite_streamer")
@@ -44,7 +45,6 @@ public class JoinInfo {
 
 
     @Builder
-
     public JoinInfo(String name, LocalDate birth, String phone, String steamId, String battleGroundId, String discordId, String mode, Tier tier, String favoriteStreamer) {
         this.name = name;
         this.birth = birth;

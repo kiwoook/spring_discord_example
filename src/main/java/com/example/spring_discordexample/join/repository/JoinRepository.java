@@ -10,4 +10,6 @@ public interface JoinRepository extends JpaRepository<JoinInfo, Long> {
     Optional<JoinInfo> findByDiscordId(String discordId);
 
     Boolean existsByDiscordId(String discordId);
+
+    void deleteByDiscordId(String discordId);
 }
