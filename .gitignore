@@ -87,5 +87,4 @@ node_modules/
 /data.xlsx
 
 #docker
-.docker-compose.yml
-docker-compose.yml
+/docker-compose.yml
