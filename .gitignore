@@ -88,3 +88,4 @@ node_modules/
 
 #docker
 .docker-compose.yml
+docker-compose.yml
