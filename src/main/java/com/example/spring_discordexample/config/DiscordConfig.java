@@ -1,10 +1,14 @@
 package com.example.spring_discordexample.config;
 
-import com.example.spring_discordexample.join.listener.*;
+import com.example.spring_discordexample.extract.listener.ExtractListener;
+import com.example.spring_discordexample.extract.service.ExactService;
+import com.example.spring_discordexample.extract.service.impl.ExactServiceImpl;
+import com.example.spring_discordexample.join.listener.CancelListener;
+import com.example.spring_discordexample.join.listener.CheckListener;
+import com.example.spring_discordexample.join.listener.JoinListener;
+import com.example.spring_discordexample.join.listener.JoinModalListener;
 import com.example.spring_discordexample.join.repository.JoinRepository;
-import com.example.spring_discordexample.join.service.ExactService;
 import com.example.spring_discordexample.join.service.JoinService;
-import com.example.spring_discordexample.join.service.impl.ExactServiceImpl;
 import com.example.spring_discordexample.join.service.impl.JoinServiceImpl;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -29,6 +33,14 @@ public class DiscordConfig {
     @Value("${guild.id}")
     private String guildId;
 
+    @Value(value = "${sql.url}")
+    private String jdbcUrl;
+
+    @Value("${sql.username}")
+    private String username;
+    @Value("${sql.password}")
+    private String password;
+
     public DiscordConfig(JoinRepository joinRepository) {
         this.joinRepository = joinRepository;
     }
@@ -38,7 +50,7 @@ public class DiscordConfig {
     }
 
     public ExactService exactService() {
-        return new ExactServiceImpl();
+        return new ExactServiceImpl(jdbcUrl, username, password);
     }
 
     @Bean

@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DateUtils {
 
+
     public static LocalDate stringToLocalDate(String dateString) {
         try{
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");

@@ -18,9 +18,10 @@ import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,29 +40,29 @@ public class JoinModalListener extends ListenerAdapter {
     public void onModalInteraction(@Nonnull ModalInteractionEvent event) {
         if (event.getModalId().equals("joinModal")) {
 
-            String birthRegex = "\\d{4}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])";
             String phoneRegex = "010\\\\d{7,8}";
 
             String birth = Objects.requireNonNull(event.getValue("birth")).getAsString();
             String phone = Objects.requireNonNull(event.getValue("phone")).getAsString();
 
+            LocalDate localDate;
             try {
-                Pattern.compile(birthRegex);
-            } catch (PatternSyntaxException e) {
+                localDate = DateUtils.stringToLocalDate(birth);
+            } catch (DateTimeParseException e) {
                 event.reply("잘못된 생년월일입니다. 다시 입력해주세요.").setEphemeral(true).queue();
                 return;
             }
 
             try {
                 Pattern.compile(phoneRegex);
-            } catch (PatternSyntaxException e) {
+            } catch (Exception e) {
                 event.reply("잘못된 전화번호입니다. 다시 입력해주세요.").setEphemeral(true).queue();
                 return;
             }
 
             log.info("===Modal Listener Working===");
             joinRequestDto.setName(Objects.requireNonNull(event.getValue("name")).getAsString());
-            joinRequestDto.setBirth(DateUtils.stringToLocalDate(birth));
+            joinRequestDto.setBirth(localDate);
             joinRequestDto.setPhone(phone);
             joinRequestDto.setSteamId(Objects.requireNonNull(event.getValue("steam")).getAsString());
             joinRequestDto.setBattleGroundId(Objects.requireNonNull(event.getValue("battleground")).getAsString());
@@ -103,17 +104,17 @@ public class JoinModalListener extends ListenerAdapter {
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
         if (event.getComponentId().equals("mode")) {
             joinRequestDto.setMode(event.getValues().get(0));
-            event.reply(event.getValues().get(0) + "모드가 선택되었습니다.").setEphemeral(true).queue();
+            event.reply("모드가 선택되었습니다.").setEphemeral(true).queue();
         }
 
         if (event.getComponentId().equals("tier")) {
             joinRequestDto.setTier(Tier.valueOf(event.getValues().get(0)));
-            event.reply(event.getValues().get(0) + "티어가 선택되었습니다.").setEphemeral(true).queue();
+            event.reply("티어가 선택되었습니다.").setEphemeral(true).queue();
         }
 
         if (event.getComponentId().equals("streamer")) {
             joinRequestDto.setFavoriteStreamer(event.getValues().get(0));
-            event.reply(event.getValues().get(0) + "을 선택하였습니다.").setEphemeral(true).queue();
+            event.reply("스트리머가 선택되었습니다.").setEphemeral(true).queue();
         }
 
     }
@@ -121,25 +122,42 @@ public class JoinModalListener extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         if (event.getComponentId().equals("check")) {
-            String discordId = event.getUser().getId();
-            String discordName = event.getUser().getEffectiveName();
-            joinRequestDto.setDiscordId(discordId);
-            EmbedBuilder eb = getEmbedBuilder(discordName);
 
-            MessageEmbed embed = eb.build();
+            if (joinRequestDto.getMode() == null) {
+                event.reply("모드를 선택해주세요.").setEphemeral(true).queue();
+                return;
+            } else if (joinRequestDto.getTier() == null) {
+                event.reply("티어를 선택해주세요.").setEphemeral(true).queue();
+                return;
+            } else if (joinRequestDto.getFavoriteStreamer() == null) {
+                event.reply("신청할 스트리머를 선택해주세요.").setEphemeral(true).queue();
+                return;
+            } else {
 
-            event.deferReply()
-                    .setEmbeds(embed)
-                    .addActionRow(
-                            Button.primary("send", "신청하기")
-                    )
-                    .setEphemeral(true)
-                    .queue();
+                String discordId = event.getUser().getId();
+                String discordName = event.getUser().getEffectiveName();
+                joinRequestDto.setDiscordId(discordId);
+                EmbedBuilder eb = getEmbedBuilder(discordName);
+
+                MessageEmbed embed = eb.build();
+
+                event.deferReply()
+                        .setEmbeds(embed)
+                        .addActionRow(
+                                Button.primary("send", "신청하기")
+                        )
+                        .setEphemeral(true).queue();
+            }
         }
 
         if (event.getComponentId().equals("send")) {
+            if (joinService.alreadyExist(joinRequestDto.getDiscordId())) {
+                event.reply("이미 신청된 아이디입니다.").setEphemeral(true).queue();
+                return;
+            }
             joinService.save(joinRequestDto);
-            event.reply("전송되었습니다.").queue();
+            event.reply("신청이 완료되었습니다.").setEphemeral(true).queue();
+
         }
     }
 

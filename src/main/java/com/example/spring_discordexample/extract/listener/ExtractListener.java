@@ -1,6 +1,6 @@
-package com.example.spring_discordexample.join.listener;
+package com.example.spring_discordexample.extract.listener;
 
-import com.example.spring_discordexample.join.service.ExactService;
+import com.example.spring_discordexample.extract.service.ExactService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.Permission;

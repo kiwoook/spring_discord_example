@@ -39,8 +39,13 @@ public class JoinServiceImpl implements JoinService {
     @Override
     @Transactional
     public void delete(String discordId) {
-        // TODO 특정 사용자에 데이터를 삭제한다.
-        joinRepository.deleteByDiscordId(discordId);
+
+        log.info("DELETE discord_id = {}" , discordId);
+        try{
+            joinRepository.deleteByDiscordId(discordId);
+        }catch (Exception e){
+            throw new EntityNotFoundException(e);
+        }
     }
 
     @Override

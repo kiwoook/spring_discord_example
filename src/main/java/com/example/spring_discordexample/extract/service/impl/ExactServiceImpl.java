@@ -1,45 +1,51 @@
-package com.example.spring_discordexample.join.service.impl;
+package com.example.spring_discordexample.extract.service.impl;
 
-import com.example.spring_discordexample.join.service.ExactService;
+import com.example.spring_discordexample.extract.service.ExactService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
 import java.sql.*;
 
 @Service
+@Slf4j
 public class ExactServiceImpl implements ExactService {
 
     private static final String QUERY = "SELECT * FROM join_info";
-    private final ThreadLocal<Workbook> workbookThreadLocal = ThreadLocal.withInitial(XSSFWorkbook::new);
-    @Value("${spring.datasource.url}")
-    private String jdbcUrl;
-    @Value("${spring.datasource.username}")
-    private String username;
-    @Value("${spring.datasource.password}")
-    private String password;
-    private final ThreadLocal<Connection> connectionThreadLocal = ThreadLocal.withInitial(() -> {
-        try {
-            return DriverManager.getConnection(jdbcUrl, username, password);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    });
+    private final ThreadLocal<Workbook> workbookThreadLocal;
+    private final ThreadLocal<Connection> connectionThreadLocal;
+
+    @Autowired
+    public ExactServiceImpl(@Value(value = "${sql.url}") String jdbcUrl,
+                            @Value("${sql.username}") String username,
+                            @Value("${sql.password}") String password) {
+        this.workbookThreadLocal = ThreadLocal.withInitial(XSSFWorkbook::new);
+        this.connectionThreadLocal = ThreadLocal.withInitial(() -> {
+
+            log.info("jdbc url = {}, username = {}, password = {}", jdbcUrl, username, password);
+
+            try {
+                return DriverManager.getConnection(jdbcUrl, username, password);
+            } catch (SQLException e) {
+                throw new UncategorizedSQLException("Failed to connect to DB", null, e);
+            }
+        });
+    }
 
     @Override
-    public void exact() {
+    public void exact() throws SQLException {
         try (Workbook workbook = workbookThreadLocal.get();
              Connection connection = connectionThreadLocal.get();
              PreparedStatement preparedStatement = connection.prepareStatement(QUERY);
              FileOutputStream fileOutput = new FileOutputStream("data.xlsx")
         ) {
-
-
-            // TODO DB TO XLSX 파일 구현하기.
 
             ResultSet resultSet = preparedStatement.executeQuery();
             Sheet sheet = workbook.createSheet("Data");
@@ -64,7 +70,7 @@ public class ExactServiceImpl implements ExactService {
 
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new SQLException(e);
         }
 
         connectionThreadLocal.remove();

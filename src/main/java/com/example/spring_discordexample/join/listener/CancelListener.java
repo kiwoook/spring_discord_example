@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,6 +43,7 @@ public class CancelListener extends ListenerAdapter {
                 String discordId = event.getUser().getId();
                 joinService.delete(discordId);
             } catch (Exception e) {
+                log.info(e.getMessage(), e);
                 event.reply("에러가 발생했습니다.").setEphemeral(true).queue();
                 return;
             }
