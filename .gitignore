@@ -84,3 +84,7 @@ $RECYCLE.BIN/
 # VS Code directories
 .vscode/
 node_modules/
+/data.xlsx
+
+#docker
+.docker-compose.yml
